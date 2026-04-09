@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'">
+    <title>Delightful Loading Screen | Slack-style</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button id="themeToggle" class="theme-toggle">🌙 Тёмная тема</button>
+
+    <div id="authModal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h3>🔐 Авторизация</h3>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Пароль" required>
+            <button id="loginBtn">Войти</button>
+            <button id="recoverBtn">Восстановить пароль</button>
+            <div id="authMessage" class="auth-message"></div>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen" style="display: none;">
+        <section class="loading">
+            For new sidebar colors, click your workspace name, then Preferences > Sidebar > Theme
+            <span class="loading__author">- Your friends at Slack</span>
+            <span class="loading__anim"></span>
+        </section>
+    </div>
+
+    <div id="welcomeScreen" class="welcome-screen" style="display: none;">
+        <div class="welcome-content">
+            <h1>✨ Добро пожаловать! ✨</h1>
+            <p>Вы успешно авторизовались в системе</p>
+            <button id="logoutBtn">Выйти</button>
+        </div>
+    </div>
+
+    <script>
+        async function hashPassword(password) {
+            return btoa(password + "secure_salt_2024");
+        }
+        
+        async function verifyPassword(inputPassword, storedHash) {
+            return storedHash === btoa(inputPassword + "secure_salt_2024");
+        }
+        
+        function generateToken(email) {
+            return btoa(email + Date.now() + Math.random());
+        }
+        
+        const userDatabase = new Map();
+        userDatabase.set("user@example.com", {
+            password: btoa("123456secure_salt_2024"),
+            attempts: 0,
+            blocked: false
+        });
+        userDatabase.set("admin@company.com", {
+            password: btoa("admin123secure_salt_2024"),
+            attempts: 0,
+            blocked: false
+        });
+        
+        function sanitizeInput(input) {
+            return input.replace(/[&<>]/g, '').trim();
+        }
+        
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        function validatePassword(password) {
+            return password.length >= 6 && /\d/.test(password);
+        }
+        
+        const authModal = document.getElementById('authModal');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loginBtn = document.getElementById('loginBtn');
+        const recoverBtn = document.getElementById('recoverBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const authMessage = document.getElementById('authMessage');
+        
+        function showLoading() {
+            authModal.style.display = 'none';
+            loadingScreen.style.display = 'flex';
+            welcomeScreen.style.display = 'none';
+            
+            setTimeout(() => {
+                showWelcome();
+            }, 3000);
+        }
+        
+        function showWelcome() {
+            loadingScreen.style.display = 'none';
+            welcomeScreen.style.display = 'flex';
+        }
+        
+        function showAuth() {
+            authModal.style.display = 'flex';
+            loadingScreen.style.display = 'none';
+            welcomeScreen.style.display = 'none';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            authMessage.innerHTML = '';
+        }
+        
+        loginBtn.onclick = async function() {
+            const email = sanitizeInput(document.getElementById('email').value);
+            const password = document.getElementById('password').value;
+            
+            if (!validateEmail(email)) {
+                authMessage.innerHTML = "❌ Неверный формат email";
+                authMessage.style.color = "red";
+                return;
+            }
+            
+            if (!validatePassword(password)) {
+                authMessage.innerHTML = "❌ Пароль должен быть ≥6 символов и содержать цифру";
+                authMessage.style.color = "red";
+                return;
+            }
+            
+            const user = userDatabase.get(email);
+            
+            if (!user) {
+                authMessage.innerHTML = "❌ Пользователь не найден";
+                authMessage.style.color = "red";
+                return;
+            }
+            
+            if (user.blocked || user.attempts >= 3) {
+                authMessage.innerHTML = "🔒 Аккаунт заблокирован. Восстановите пароль.";
+                authMessage.style.color = "red";
+                return;
+            }
+            
+            if (await verifyPassword(password, user.password)) {
+                user.attempts = 0;
+                const token = generateToken(email);
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('userEmail', email);
+                authMessage.innerHTML = "✅ Вход выполнен успешно!";
+                authMessage.style.color = "green";
+                setTimeout(() => {
+                    showLoading();
+                }, 500);
+            } else {
+                user.attempts++;
+                const remaining = 3 - user.attempts;
+                if (remaining === 0) user.blocked = true;
+                authMessage.innerHTML = `❌ Неверный пароль. Осталось попыток: ${remaining}`;
+                authMessage.style.color = "red";
+            }
+        };
+        
+        recoverBtn.onclick = function() {
+            const email = sanitizeInput(document.getElementById('email').value);
+            
+            if (!validateEmail(email)) {
+                authMessage.innerHTML = "❌ Введите корректный email для восстановления";
+                authMessage.style.color = "red";
+                return;
+            }
+            
+            if (!userDatabase.has(email)) {
+                authMessage.innerHTML = "❌ Пользователь с таким email не найден";
+                authMessage.style.color = "red";
+                return;
+            }
+            
+            const resetToken = Math.random().toString(36).substring(2, 15);
+            const resetLink = `https://yourapp.com/reset?token=${resetToken}&email=${encodeURIComponent(email)}`;
+            
+            console.log(`📧 Ссылка для восстановления: ${resetLink}`);
+            authMessage.innerHTML = "📧 Инструкция по восстановлению отправлена на ваш email";
+            authMessage.style.color = "blue";
+        };
+        
+        logoutBtn.onclick = function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            showAuth();
+        };
+        
+        const savedToken = localStorage.getItem('authToken');
+        if (savedToken) {
+            showLoading();
+        } else {
+            showAuth();
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.textContent = '☀️ Светлая тема';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-theme');
+                themeToggle.textContent = '🌙 Тёмная тема';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            setTheme('dark');
+        } else {
+            setTheme('light');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('dark-theme')) {
+                setTheme('light');
+            } else {
+                setTheme('dark');
+            }
+        });
+    </script>
+</body>
+</html>

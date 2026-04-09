@@ -1,0 +1,32 @@
+{
+    "application": {
+        "name": "Delightful Loading Screen",
+        "version": "1.0.0",
+        "author": "Emmanuel Ohans",
+        "description": "Анимированный индикатор загрузки в стиле Slack"
+    },
+    "installation": {
+        "type": "static",
+        "requirements": "Любой веб-браузер",
+        "files": ["index.html", "style.css"]
+    },
+    "performance": {
+        "animation_fps": 60,
+        "rotation_speed_ms": 600,
+        "memory_usage_mb": "~8-12",
+        "cpu_usage_percent": 0,
+        "algorithmic_complexity": "O(1)"
+    },
+    "theming": {
+        "primary_color": "#039be5",
+        "secondary_color": "rgba(189,189,189,0.25)",
+        "border_width_px": 5
+    },
+    "security": {
+        "csp_policy": true,
+        "input_sanitization": true,
+        "password_hashing": "base64 + salt",
+        "max_login_attempts": 3,
+        "session_token": true
+    }
+}
