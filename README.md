@@ -9,7 +9,7 @@
 
 
 <p align="center">
-  <video src="https://github.com/user-attachments/assets/2787bc23-9748-4e30-8ee0-df6fd66e9d61" controls width="600"></video>
+  <video src="https://github.com/ZakharBlinov/Loading-Screen-Project/issues/1#issue-4256937192" controls width="600"></video>
 </p>
 
 
