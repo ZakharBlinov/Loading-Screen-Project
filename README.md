@@ -7,9 +7,12 @@
   <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA">
 </p>
 
+
 <p align="center">
-  <img src="demo.gif" alt="Демонстрация работы" width="600">
+  <video src="https://github.com/user-attachments/assets/2787bc23-9748-4e30-8ee0-df6fd66e9d61" controls width="600"></video>
 </p>
+
+
 
 ---
 
