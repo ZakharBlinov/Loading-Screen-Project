@@ -79,3 +79,11 @@
 1. **Клонируйте репозиторий:**
    ```bash
    git clone https://github.com/ZakharBlinov/loading-screen.git
+---
+## 📊 КАЧЕСТВО КОДА
+
+[![Maintainability](https://qlty.sh/gh/ZakharBlinov/projects/Loading-Screen-Project/maintainability.svg)](https://qlty.sh/gh/ZakharBlinov/projects/Loading-Screen-Project)
+
+**Оценка Code Climate:** **A**
+
+---
